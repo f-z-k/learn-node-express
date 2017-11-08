@@ -1,0 +1,175 @@
+<!DOCTYPE>
+<html lang="en" id="html">
+<head>
+<meta charset="UTF-8">
+  <title></title>
+  <style>
+    *{
+      margin:0px;
+      padding:0px;
+    }
+    .box{
+      width: 710px;
+      height: 502px;
+      margin:0px auto;
+    }
+    .message-box{
+      float: left;
+      width: 500px;
+      height: 500px;
+      border:1px #333 solid;
+    }
+    .message-box p{
+      text-align: center;
+      font-size: 20px;
+      font-weight: 500;
+    }
+    .message-box ul li{
+      height: 46px;
+      line-height: 46px;
+      list-style: none;
+      border-bottom:1px #666 solid;
+    }
+    .login-box{
+      float: left;
+    }
+    .login-box{
+      width: 200px;
+      padding-top:40px;
+    }
+    .login-box input{
+      float: right;
+      width: 150px;
+      height: 30px;
+      text-align: center;
+      border-radius: 15px;
+      outline: none;
+      border: 1px solid #999;
+      margin-bottom: 4px;
+    }
+    .login-box .button-login{
+      float: right;
+      width: 150px;
+      height: 30px;
+      text-align: center;
+      line-height: 30px;
+      border-radius: 15px;
+      cursor: pointer;
+      background-color: #999;
+    }
+    .input-box {
+      width: 710px;
+      margin:0px auto;
+      overflow: hidden;
+    }
+    .input-box input{
+      float: left;
+      width: 502px;
+      height: 40px;
+      font-size: 24px;
+      text-align: center;
+      border:2px solid #333;
+    }
+    .input-box p{
+      float: left;
+      width: 80px;
+      height: 40px;
+      color: #fff;
+      text-align: center;
+      line-height: 40px;
+      font-size: 30px;
+      background-color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="message-box">
+      <p>聊天对话框</p>
+      <p>
+        <span>当前在线人数:</span>
+        <span>10</span>
+      </p>
+      <ul>
+      </ul>
+    </div>
+    <div class="login-box">
+      <input type="text" placeholder="用户名" class="user-id">
+      <input type="text" placeholder="密码" class="user-pwd">
+      <p class="button-login">登录</p>
+    </div>
+  </div>
+  <div class="input-box">
+    <input type="text">
+    <p class="post-msg">发送</p>
+  </div>
+</body>
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/socket.io/2.0.3/socket.io.js"></script>
+<script type="text/javascript">
+  var socket = io('http://127.0.0.1:1989');
+  //接收所有广播消息
+  socket.on('msg', function(data) {
+    console.log(data);
+  });
+  socket.on('connect', function(o) {
+    console.log('连接成功');
+  });
+  socket.on('connecting', function() {
+    console.log('正在连接');
+  });
+  socket.on('disconnect', function() {
+    console.log('断开连接了');
+  });
+  socket.on('error', function() {
+    console.log('连接错误');
+  });
+  socket.on('reconnect', function() {
+    console.log('成功重连');
+  });
+  socket.on('reconnecting', function() {
+    console.log('正在重连');
+  });
+  //监听新用户登陆
+  socket.on('login', function(o) {
+    console.log('新用户登录了')
+    updateMsg(o, 'login');
+  });
+  //监听用户退出
+  socket.on('logout', function(o) {
+    console.log('新用户退出了')
+  });
+  // 监听发送 消息
+  socket.on('message', function(obj) {
+    $('ul').append('<li>'+ obj.username + '说：' + obj.content +'</li>')
+    // console.log(obj)
+  });
+  var _userId = null;
+  var _userPwd = null;
+  $('.button-login').click(function () {
+    _userId = $('.user-id').val()
+    _userPwd = $('.user-pwd').val()
+    if (_userId && _userPwd) {
+      socket.emit('login', {
+        'userid': _userId,
+        'username': _userPwd
+      });
+    } else {
+      alert('不能输入为空')
+    }
+  })
+  $('.post-msg').click(function () {
+    socket.emit('message', {
+      username: _userId,
+      content: $('.input-box input').val()
+    })
+  })
+  // 更新信息
+  var updateMsg = function (o, action) {
+    console.log(action)
+    console.log(o)
+    var onlineNumber = o.onlineCount;
+    $('.message-box').find('p').find('span').eq(1).text(onlineNumber)
+  }
+</script>
+</html>
